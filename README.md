@@ -1,9 +1,18 @@
-![Screenshot](./screenshot.png)
+![Preview](./preview.jpg)
 
-# threejs-starter
+# Celestial Bodies
 
-A basic and opiniated threejs starter to quickstart prototyping.
-Spend less time on configuration and more time on the fun part!
+## What
+
+ThreeJS Experiment.
+
+Basically tons of particles positioned of the surface of concentric spheres.
+
+Their opacity, scale and color are modulated by noise.
+
+Apply bloom, et voila.
+
+## How
 
 Install dependencies
 
@@ -17,8 +26,4 @@ Run
 npm run start
 ```
 
-Build
-
-```sh
-npm run build-prod
-```
+Open `localhost:1234` in your browser. Have fun!
