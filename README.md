@@ -2,6 +2,8 @@
 
 # Celestial Bodies
 
+<a href="https://theogil.github.io/celestial-bodies/" target="_blank">Check out the live version in your browser! 🌟</a>
+
 ## What
 
 ThreeJS Experiment.
