@@ -5,12 +5,12 @@ import {
   BloomEffect,
   EffectComposer,
   EffectPass,
-  NoiseEffect,
   RenderPass,
   VignetteEffect,
 } from "postprocessing";
 import Tweakpane from "tweakpane";
 import Blob from "./Blob";
+import { initialBlobs } from "./config";
 
 const CELESTIAL_BODY_PARAMS = {
   clearColor: "#07001c",
@@ -19,6 +19,7 @@ const CELESTIAL_BODY_PARAMS = {
 class CelestialBody {
   constructor() {
     this.onResize = this.onResize.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
     this.animate = this.animate.bind(this);
 
     this.initRenderer();
@@ -28,10 +29,13 @@ class CelestialBody {
     this.initGUI();
 
     window.addEventListener("resize", this.onResize);
+    window.addEventListener("keydown", this.onKeyDown);
 
     this.blobs = [];
 
-    this.addBlob();
+    initialBlobs.forEach((options) => {
+      this.addBlob(options);
+    });
   }
 
   initRenderer() {
@@ -144,6 +148,16 @@ class CelestialBody {
       .on("click", () => {
         this.addBlob();
       });
+
+    this.guiBlobFolder
+      .addButton({
+        title: "Remove all blobs",
+      })
+      .on("click", () => {
+        this.blobs.forEach((blob) => {
+          blob.killBlob();
+        });
+      });
   }
 
   onResize() {
@@ -155,31 +169,18 @@ class CelestialBody {
     this.composer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  addBlob() {
+  onKeyDown(e) {
+    if (e.keyCode === 68) {
+      this.gui.hidden = !this.gui.hidden;
+      document.querySelector(".js-info").classList.toggle("hidden");
+    }
+  }
+
+  addBlob(options) {
     const blob = new Blob({
       gui: this.guiBlobFolder,
       id: this.blobs.length + 1,
-      blobSize: 500,
-      blobScale: 1,
-      rotationSpeed: Math.random() * 0.01,
-      translateNoiseAmount: Math.random() * 200,
-      translateNoiseScale: Math.random() * 0.01,
-      translateNoiseSpeed: Math.random() * 0.01,
-      particlesCount: Math.random() * 70000,
-      scale: 5 + Math.random() * 5,
-      scaleNoiseAmount: Math.random(),
-      scaleNoiseScale: Math.random() * 0.01,
-      scaleNoiseSpeed: Math.random() * 0.01,
-      color1: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-      color2: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-      colorNoiseAmount: Math.random(),
-      colorNoiseScale: Math.random() * 0.01,
-      colorNoiseSpeed: Math.random() * 0.01,
-      alpha: 0.5 + Math.random() * 0.5,
-      alphaNoiseAmount: Math.random(),
-      alphaNoiseScale: Math.random() * 0.01,
-      alphaNoiseSpeed: Math.random() * 0.01,
-      alphaNoisePow: Math.random() * 2,
+      ...options,
     });
 
     this.scene.add(blob);
@@ -189,8 +190,11 @@ class CelestialBody {
   animate() {
     requestAnimationFrame(this.animate);
 
-    this.blobs.forEach((blob) => {
+    this.blobs.forEach((blob, i) => {
       blob.update();
+      if (blob.isDead) {
+        this.blobs.splice(i, 1);
+      }
     });
 
     this.composer.render();

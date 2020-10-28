@@ -1,39 +1,13 @@
 import * as THREE from "three";
 import vertexShader from "../shaders/blob/vertex.glsl";
 import fragmentShader from "../shaders/blob/fragment.glsl";
-import texture from "../img/circle.png";
-
-const MAX_PARTICLES_COUNT = 70000;
-
-const DEFAULT_BLOB_OPTIONS = {
-  blobSize: 500,
-  blobScale: 1,
-  rotationSpeed: 0.002,
-  translateNoiseAmount: 70,
-  translateNoiseScale: 0.0025,
-  translateNoiseSpeed: 0.0043,
-  particlesCount: 10000,
-  scale: 15,
-  scaleNoiseAmount: 1,
-  scaleNoiseScale: 0.0025,
-  scaleNoiseSpeed: 0.01,
-  color1: "#dc00ff",
-  color2: "#00fff4",
-  colorNoiseAmount: 1,
-  colorNoiseScale: 0.0004,
-  colorNoiseSpeed: 0.0065,
-  alpha: 0.5,
-  alphaNoiseAmount: 1,
-  alphaNoiseScale: 0.0007,
-  alphaNoiseSpeed: 0.0114,
-  alphaNoisePow: 1.5,
-};
+import { defaultBlobOptions, maxParticlesCount } from "./config";
 
 class Blob extends THREE.Object3D {
   constructor(options) {
     super(options);
 
-    this.options = { ...DEFAULT_BLOB_OPTIONS, ...options };
+    this.options = { ...defaultBlobOptions, ...options };
 
     this.color1 = new THREE.Color(this.options.color1);
     this.color2 = new THREE.Color(this.options.color2);
@@ -51,10 +25,10 @@ class Blob extends THREE.Object3D {
     this.geometry.attributes = planeGeometry.attributes;
 
     const translateAttributeSize = 3;
-    var translateArray = new Float32Array(MAX_PARTICLES_COUNT * 3);
+    var translateArray = new Float32Array(maxParticlesCount * 3);
 
     const translate = new THREE.Vector3();
-    for (let i = 0; i < MAX_PARTICLES_COUNT; i++) {
+    for (let i = 0; i < maxParticlesCount; i++) {
       const phi = THREE.Math.randFloat(0, Math.PI);
       const theta = THREE.Math.randFloat(0, Math.PI * 2);
       translate.setFromSphericalCoords(this.options.blobSize, phi, theta);
@@ -78,10 +52,8 @@ class Blob extends THREE.Object3D {
       transparent: true,
       depthTest: false,
       depthWrite: false,
-      // blending: THREE.AdditiveBlending,
+      blending: THREE.AdditiveBlending,
       uniforms: {
-        uTexture: { value: new THREE.TextureLoader().load(texture) },
-
         uScale: { value: this.options.scale },
         uScaleNoiseTime: { value: 0 },
         uScaleNoiseScale: { value: this.options.scaleNoiseScale },
@@ -117,15 +89,15 @@ class Blob extends THREE.Object3D {
   }
 
   initGUI(id) {
-    const folder = this.options.gui.addFolder({
+    this.gui = this.options.gui.addFolder({
       title: `Blob #${id}`,
       expanded: false,
     });
 
-    folder.addInput(this.mesh, "visible");
+    this.gui.addInput(this.mesh, "visible");
 
     // BLOB SCALE
-    folder
+    this.gui
       .addInput(this.scale, "x", {
         label: "scale",
         min: 0,
@@ -138,14 +110,22 @@ class Blob extends THREE.Object3D {
       });
 
     // ROTATION SPEED
-    folder.addInput(this.options, "rotationSpeed", {
+    this.gui.addInput(this.options, "rotationSpeed", {
       label: "rotation",
       min: -0.01,
       max: 0.01,
     });
 
-    this.initGUITranslateNoise(folder);
-    this.initGUIParticles(folder);
+    this.initGUITranslateNoise(this.gui);
+    this.initGUIParticles(this.gui);
+
+    this.gui
+      .addButton({
+        title: "Remove",
+      })
+      .on("click", () => {
+        this.killBlob();
+      });
   }
 
   initGUITranslateNoise(root) {
@@ -188,7 +168,7 @@ class Blob extends THREE.Object3D {
       .addInput(this.options, "particlesCount", {
         label: "count",
         min: 0,
-        max: MAX_PARTICLES_COUNT,
+        max: maxParticlesCount,
       })
       .on("change", (count) => {
         this.geometry.instanceCount = count;
@@ -351,6 +331,17 @@ class Blob extends THREE.Object3D {
       max: 10,
       step: 0.0001,
     });
+  }
+
+  killBlob() {
+    this.gui.dispose();
+    this.remove(this.mesh);
+    this.geometry.dispose();
+    this.material.dispose();
+
+    // Add a isDead flag, so the CelestialBody class can know
+    // if this particular blob can be deleted or not
+    this.isDead = true;
   }
 
   update() {
