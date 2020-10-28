@@ -1,1 +1,0 @@
-{"version":3,"sources":["scss\\styles.scss"],"names":[],"mappings":"AAAA,KACE,SAGF,OACE,cAAA,CACA,KAAA,CACA","file":"app.4226d0eb.css","sourceRoot":"..\\src","sourcesContent":["body {\r\n  margin: 0;\r\n}\r\n\r\n.scene {\r\n  position: fixed;\r\n  top: 0;\r\n  left: 0;\r\n}\r\n"]}
